@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "lecture2-homework"
+  namespace: homework
+  labels:
+    app: "nginx-deployment-label"
+spec:
+  volumes:
+  - name: share-volume
+    emptyDir: {}
+  initContainers:
+  - name: create-html
+    image: "busybox"
+    command: ['/bin/sh','-c','echo "Hello World! Тестовая страница." > /init/index.html']
+    volumeMounts:
+    - mountPath: /init
+      name: share-volume
+  containers:
+  - name: web-server
+    image: "nginx"
+    command: ['/bin/sh','-c','cp /homework/index.html /usr/share/nginx/html/index.html && nginx -g "daemon off;"']
+    resources:
+      limits:
+        cpu: 200m
+        memory: 500Mi
+      requests:
+        cpu: 100m
+        memory: 200Mi
+    ports:
+    - containerPort: 8000
+    volumeMounts:
+    - mountPath: /homework
+      name: share-volume
+    lifecycle:
+      preStop:
+        exec:
+          command: ["/bin/sh","-c","rm /homework/index.html"]
